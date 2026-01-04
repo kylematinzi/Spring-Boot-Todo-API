@@ -6,7 +6,7 @@ POST http://localhost:8080/api/todos
 Content-Type: application/json
 
 {
-  "title": "First todo in the DB",
+  "title": "Organize the house",
   "completed": false
 }
 
@@ -24,7 +24,7 @@ POST http://localhost:8080/api/todos
 Content-Type: application/json
 
 {
-  "title": "Orange todo in the DB",
+  "title": "Go to the gym",
   "completed": false
 }
 
@@ -47,6 +47,24 @@ Content-Type: application/json
 {
   "title": "Updated title – completed now",
   "completed": true
+}
+
+### Register a new user (Must Be done first)
+POST http://localhost:8080/api/auth/register
+Content-Type: application/json
+
+{
+  "email": "testuser@example.com",
+  "password": "123456"
+}
+
+### Log the new user in (Only AFTER Register)
+POST http://localhost:8080/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "testuser@example.com",
+  "password": "123456"
 }
 
 ### Get all again (should now show the new one with id)
