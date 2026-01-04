@@ -1,10 +1,14 @@
 package com.testproject.spring_boot_test_project.controller;
 
 import com.testproject.spring_boot_test_project.model.Todo;
+import com.testproject.spring_boot_test_project.model.User;
 import com.testproject.spring_boot_test_project.repository.TodoRepository;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.apache.tomcat.util.net.openssl.ciphers.Authentication;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.net.URI;
@@ -17,15 +21,21 @@ public class TodoController {
 
     private final TodoRepository todoRepository;
 
+    @SuppressWarnings("ConstantConditions")
+    private User getCurrentUser() {
+        return (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+    }
+
     // GET all todos
     @GetMapping
     public List<Todo> getAllTodos() {
-        return todoRepository.findAll();
+        return todoRepository.findByOwner(getCurrentUser());
     }
 
     // POST - create new todo with proper 201 Created
     @PostMapping
     public ResponseEntity<Todo> createTodo(@Valid @RequestBody Todo todo) {
+        todo.setOwner(getCurrentUser());// this sets the owner of the todo to the current user
         Todo saved = todoRepository.save(todo);
         return ResponseEntity
                 .created(URI.create("/api/todos/" + saved.getId()))
@@ -35,30 +45,43 @@ public class TodoController {
     // DELETE - delete the selected id
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteTodo(@PathVariable Long id){
-        if (!todoRepository.existsById(id)) {
-            return ResponseEntity.notFound().build();  // 404 if not found
+        Todo todo = todoRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Todo not found"));
+
+        if (!todo.getOwner().equals(getCurrentUser())) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();  // 403 if not owner
         }
+
         todoRepository.deleteById(id);
-        return ResponseEntity.noContent().build();  // 204 No Content on success
+        return ResponseEntity.noContent().build();
     }
 
     //UPDATE - update todo by ID
     @PutMapping("/{id}")
     public ResponseEntity<Todo> updateTodo(@PathVariable Long id, @RequestBody Todo updatedTodo) {
-        if (!todoRepository.existsById(id)) {
-            return ResponseEntity.notFound().build();  // 404 if not found
+        Todo todo = todoRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Todo not found"));
+
+        if (!todo.getOwner().equals(getCurrentUser())) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();  // 403 if not owner
         }
-        // Keep the original ID, copy new values. New values are Title and Completion status.
+
         updatedTodo.setId(id);
+        updatedTodo.setOwner(getCurrentUser());  // <-- Keep owner (safety)
         Todo saved = todoRepository.save(updatedTodo);
-        return ResponseEntity.ok(saved);  // 200 OK with updated todo
+        return ResponseEntity.ok(saved);
     }
 
     // GET single todo by ID
     @GetMapping("/{id}")
     public ResponseEntity<Todo> getTodoById(@PathVariable Long id) {
-        return todoRepository.findById(id)
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
+        Todo todo = todoRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Todo not found"));
+
+        if (!todo.getOwner().equals(getCurrentUser())) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();  // 403 if not owner
+        }
+
+        return ResponseEntity.ok(todo);
     }
 }

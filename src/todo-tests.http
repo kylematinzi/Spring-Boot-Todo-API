@@ -54,7 +54,7 @@ POST http://localhost:8080/api/auth/register
 Content-Type: application/json
 
 {
-  "email": "testuser@example.com",
+  "email": "testuser2@example.com",
   "password": "123456"
 }
 
@@ -67,8 +67,32 @@ Content-Type: application/json
   "password": "123456"
 }
 
+
+
 ### Get all again (should now show the new one with id)
 GET http://localhost:8080/api/todos
 
 ### Get by ID
 GET http://localhost:8080/api/todos/1
+
+### Get todos - WITH valid token (should succeed)
+GET http://localhost:8080/api/todos
+Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ0ZXN0dXNlckBleGFtcGxlLmNvbSIsImlhdCI6MTc2NzU1NzI4OCwiZXhwIjoxNzY3NjQzNjg4fQ.9DyX8ecU_qGRJl8__wHWjKriK_qBgRManAp4PzKUXiQ
+
+### Create a todo (must be authenticated with valid JWT token)
+POST http://localhost:8080/api/todos
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ0ZXN0dXNlcjFAZXhhbXBsZS5jb20iLCJpYXQiOjE3Njc1NjE3MzEsImV4cCI6MTc2NzY0ODEzMX0.Gqxz_DBYzJqJco9Oe3VY6ILlJZr48OtQRpde1TiGemI
+
+{
+  "title": "My new secure todo",
+  "completed": false
+}
+
+### User 1 can only see their todos
+GET http://localhost:8080/api/todos
+Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ0ZXN0dXNlcjFAZXhhbXBsZS5jb20iLCJpYXQiOjE3Njc1NjE3MzEsImV4cCI6MTc2NzY0ODEzMX0.Gqxz_DBYzJqJco9Oe3VY6ILlJZr48OtQRpde1TiGemI
+
+### User 2 can only see their todos
+GET http://localhost:8080/api/todos
+Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ0ZXN0dXNlcjJAZXhhbXBsZS5jb20iLCJpYXQiOjE3Njc1NjE3NjAsImV4cCI6MTc2NzY0ODE2MH0.-Xkrh3T34KZjoU5kxvoUitJV50zlvrSft-0W3VUtaEU
