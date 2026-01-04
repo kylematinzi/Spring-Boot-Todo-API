@@ -2,11 +2,11 @@
 
 This is a **fully secure, multi-user RESTful Todo API** built with Spring Boot, Spring Data JPA, H2 in-memory database, Spring Validation, and Spring Security with JWT authentication.
 
-The API supports complete **CRUD operations** with:
+The API supports complete CRUD operations with:
 - Proper HTTP status codes (201 Created, 204 No Content, 401 Unauthorized, 403 Forbidden, 404 Not Found)
 - Input validation and clean, field-specific error messages
-- **JWT-based stateless authentication** (registration, login, token validation)
-- **User ownership and data isolation** — each user can only access, modify, or delete their own todos
+- JWT-based stateless authentication (registration, login, token validation)
+- User ownership and data isolation — each user can only access, modify, or delete their own todos
 - BCrypt password hashing and secure practices (no password leaks in responses)
 
 It follows a clean, layered architecture:
