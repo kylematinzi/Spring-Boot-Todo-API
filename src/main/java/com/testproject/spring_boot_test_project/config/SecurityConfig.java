@@ -15,28 +15,28 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
+/**
+ * Central configuration for Spring Security.
+ * Defines the security rules for the entire application.
+ * Key design decisions:
+ * - Stateless authentication, no sessions — uses JWT tokens
+ * - CSRF disabled (safe for stateless APIs because I'm using JWT)
+ * - Public access to auth endpoints and H2 console
+ * - All other endpoints require authentication via valid JWT
+ * - JWT filter added to validate tokens on every request
+ */
 @Configuration
 public class SecurityConfig {
 
-
-//    @Bean
-//    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-//        http
-//                .csrf(csrf -> csrf.disable())  // Disable CSRF for API testing (safe locally)
-//                .authorizeHttpRequests(auth -> auth
-//                        .requestMatchers("/h2-console/**").permitAll()
-//                        .requestMatchers("/api/todos/**").permitAll()
-//                        .requestMatchers("/").permitAll()  // <<< Allow root path (localhost:8080/)
-//                        .anyRequest().permitAll()          // <<< TEMPORARY: Open everything for practice
-//                )
-//                .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
-//                .headers(headers -> headers
-//                        .frameOptions(frameOptions -> frameOptions.disable())
-//                );
-//
-//        return http.build();
-//    }
-
+    /**
+     * Configures the security filter chain.
+     * - Disables CSRF (not needed in stateless JWT setup)
+     * - Enforces stateless session management
+     * - Permits unauthenticated access to registration, login, H2 console, and root
+     * - Requires authentication for all other requests
+     * - Inserts custom JWT filter before default username/password filter
+     * - Disables frame options to allow H2 console in iframe (development only)
+     */
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http, JwtAuthenticationFilter jwtAuthFilter) throws Exception {
         http
@@ -54,20 +54,32 @@ public class SecurityConfig {
         return http.build();
     }
 
+    /**
+     * Provides BCrypt password encoder for secure password hashing.
+     * Automatically used by Spring Security for encoding and matching passwords.
+     */
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
 
+    /**
+     * Exposes the AuthenticationManager bean.
+     * Required for certain Spring Security features, kept for completeness.
+     */
     @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
         return config.getAuthenticationManager();
     }
 
+    /**
+     * Custom UserDetailsService implementation.
+     * Loads user by email "username", from the database.
+     * Used by the JWT filter to retrieve user details during token validation.
+     */
     @Bean
     public UserDetailsService userDetailsService(UserRepository userRepository) {
         return username -> userRepository.findByEmail(username)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found"));
     }
-
 }

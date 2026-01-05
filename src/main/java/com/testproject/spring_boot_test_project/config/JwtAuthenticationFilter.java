@@ -18,6 +18,19 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
 
+/**
+ * Core filter logic executed on every request.
+ * Steps:
+ * 1. Check for Authorization header starting with "Bearer "
+ * 2. Extract the JWT token
+ * 3. Extract username (email) from token
+ * 4. If no existing authentication in context:
+ *    - Load UserDetails by username
+ *    - Validate token (username match + not expired)
+ *    - Create and set UsernamePasswordAuthenticationToken in SecurityContext
+ * 5. Continue the filter chain
+ * If no token or invalid header → skip authentication and continue.
+ */
 @Component
 @RequiredArgsConstructor
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
@@ -42,6 +55,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 return;
             }
 
+            // Remove "Bearer " prefix
             jwt = authHeader.substring(7);
             userEmail = jwtService.extractUsername(jwt);
 
